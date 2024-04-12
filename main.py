@@ -138,5 +138,3 @@ if __name__ == '__main__':
 
         print("src:%s -- trg:%s , best_result: %g \n\n" % (src_id, trg_id, best_score), file=record_file)
         record_file.flush()
-
-
