@@ -25,11 +25,12 @@ def setSeed(seed):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('-cuda_device', type=str, default='1', help='which gpu to use ')
+    parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
     parser.add_argument('-dataset', type=str, default='Boiler', help='which dataset ')
     parser.add_argument("-batch_size", type=int, default=512)
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
+    
 
     args = parser.parse_args()
 
