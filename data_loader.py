@@ -16,7 +16,9 @@ def get_dataset_size(test_data_path, dataset, window_size):
 def data_transform(data_path, window_size, segments_length, dataset):
     if dataset == 'Boiler':
         data = pd.read_csv(data_path).values
+        print(data.shape)
         data = data[:, 2:]  # remove time step
+        print(data.shape) #(, 21)
         feature, label = [], []
         for i in range(window_size - 1, len(data)):
             label.append(data[i, -1])
@@ -25,12 +27,12 @@ def data_transform(data_path, window_size, segments_length, dataset):
             for length in segments_length:
                 a = data[(i - length + 1):(i + 1), :-1]  # [seq_length, x_dim]
                 a = np.pad(a, pad_width=((0, window_size - length), (0, 0)),
-                           mode='constant')  # padding to [window_size, x_dim]
+                           mode='constant')  # padding to [window_size, x_dim] # 补0
                 sample.append(a)
 
             # need the shape of sample is  [ x_dim ,segments_num , max_length ]
-            sample = np.array(sample)  # [segments_num , max_length, x_dim]
-            sample = np.transpose(sample, axes=((2, 0, 1)))  # [ x_dim , segments_num , window_size, 1]
+            sample = np.array(sample)  # [segments_num , max_length, x_dim] #（6，6，20）
+            sample = np.transpose(sample, axes=((2, 0, 1)))  # [ x_dim , segments_num , window_size, 1] #（20，6，6）
 
             feature.append(sample)
 
@@ -38,7 +40,7 @@ def data_transform(data_path, window_size, segments_length, dataset):
 
     else:
         raise Exception('unknown dataset!')
-    print(data_path, feature.shape)
+    print(data_path, feature.shape) #(, 20, 6, 6)
     return feature, label
 
 

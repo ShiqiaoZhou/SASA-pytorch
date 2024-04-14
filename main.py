@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
         while global_step < hyparams_config.training_steps:
             model.train()
-            src_train_batch_x, src_train_batch_y, src_train_batch_l = src_train_generator.__next__()
+            src_train_batch_x, src_train_batch_y, src_train_batch_l = src_train_generator.__next__() # 没有epochs，只有根据batch的training steps
 
             tgt_train_batch_x, tgt_train_batch_y, tgt_train_batch_l = tgt_train_generator.__next__()
 

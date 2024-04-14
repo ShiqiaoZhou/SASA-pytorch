@@ -7,7 +7,7 @@ class Boiler:
     def __init__(self):
         super(Boiler, self).__init__()
         self.test_per_step = 50
-        self.training_steps = 1000
+        self.training_steps = 1
         self.drop_prob = 0
         self.learning_rate = 0.0015
         self.coeff = 10
