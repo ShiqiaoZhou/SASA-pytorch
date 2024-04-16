@@ -24,7 +24,7 @@ def data_transform(data_path, window_size, segments_length, dataset):
             label.append(data[i, -1])
 
             sample = []
-            for length in segments_length:
+            for length in segments_length: # 对每个window_size里的数据都进行补零到window size length的长度
                 a = data[(i - length + 1):(i + 1), :-1]  # [seq_length, x_dim]
                 a = np.pad(a, pad_width=((0, window_size - length), (0, 0)),
                            mode='constant')  # padding to [window_size, x_dim] # 补0
@@ -64,4 +64,4 @@ def data_generator(data_path, window_size, segments_length, batch_size, dataset,
         batch_length = np.array(segments_length * (end_index - start_index))
         batch_count += 1
 
-        yield batch_feature, batch_label, batch_length
+        yield batch_feature, batch_label, batch_length #（batchsize, 20, 6, 6）,(bacthsize, ),(batchsize*6)

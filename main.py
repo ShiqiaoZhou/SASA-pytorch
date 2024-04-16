@@ -64,13 +64,12 @@ if __name__ == '__main__':
                                              args.dataset, dataset_config.window_size)
 
 
-
         model = SASA(max_len=dataset_config.window_size, coeff=hyparams_config.coeff,
                      segments_num=dataset_config.segments_num, input_dim=dataset_config.input_dim,
                      class_num=dataset_config.class_num,
                      h_dim=hyparams_config.h_dim, dense_dim=hyparams_config.dense_dim,
-                     drop_prob=hyparams_config.drop_prob,
-                     lstm_layer=hyparams_config.lstm_layer)
+                     drop_prob = hyparams_config.drop_prob,
+                     lstm_layer = hyparams_config.lstm_layer)
 
         model.to(device)
 

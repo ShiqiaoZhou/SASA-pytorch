@@ -25,16 +25,16 @@ class SASA(nn.Module):
         self.class_num = class_num
         self.coeff = coeff
         self.base_bone_list = nn.ModuleList(
-            [LSTM(input_size=1, hidden_size=self.h_dim, num_layers=self.lstm_layer, batch_first=True)
+            [LSTM(input_size=1, hidden_size=self.h_dim, num_layers=self.lstm_layer, batch_first=True) # hidden_size is the number of features in the hidden state h, 是输出的维度
              for _ in range(0, self.feature_dim)])
         self.self_attn_Q = nn.Sequential(nn.Linear(in_features=self.h_dim, out_features=self.h_dim),
                                          nn.ELU()
                                          )
 
         self.self_attn_K = nn.Sequential(nn.Linear(in_features=self.h_dim, out_features=self.h_dim),
-
                                          nn.LeakyReLU()
                                          )
+        
         self.self_attn_V = nn.Sequential(nn.Linear(in_features=self.h_dim, out_features=self.h_dim),
 
                                          nn.LeakyReLU()
@@ -126,12 +126,12 @@ class SASA(nn.Module):
 
         Hi_list = []
 
-        for i in range(0, self.feature_dim):
-            xi = torch.reshape(x[:, i, :, :], shape=[-1, self.max_len, 1])
+        for i in range(0, self.feature_dim): # 每个单元时间序列的循环
+            xi = torch.reshape(x[:, i, :, :], shape=[-1, self.max_len, 1]) # -1 是被infer的，这里是之前所有的元素除以（self.max_len * 1）
             _, (candidate_representation_xi, _) = self.base_bone_list[i](xi)
 
             candidate_representation_xi = torch.reshape(candidate_representation_xi,
-                                                        shape=[-1, self.segments_num, self.h_dim])
+                                                        shape=[-1, self.segments_num, self.h_dim]) # final hidden state for each element in the sequence #(batch,num_layers, hiddent size)
 
             uni_candidate_representation_list[i] = candidate_representation_xi
 
@@ -141,7 +141,7 @@ class SASA(nn.Module):
 
             intra_attention_weight_xi = self.self_attention(Q=Q_xi, K=K_xi, sparse=True)
 
-            Z_i = torch.bmm(intra_attention_weight_xi.view(intra_attention_weight_xi.shape[0], 1, -1),
+            Z_i = torch.bmm(intra_attention_weight_xi.view(intra_attention_weight_xi.shape[0], 1, -1), 
                             V_xi)
 
             intra_attn_weight_list[i]=(torch.squeeze(intra_attention_weight_xi))
