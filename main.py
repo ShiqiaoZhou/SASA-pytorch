@@ -26,8 +26,8 @@ def setSeed(seed):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
     parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
-    parser.add_argument('-dataset', type=str, default='Boiler', help='which dataset ')
-    parser.add_argument("-batch_size", type=int, default=512)
+    parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
+    parser.add_argument("-batch_size", type=int, default=128)
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
     
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         tgt_test_set_size = get_dataset_size(os.path.join(dataset_config.data_base_path, trg_id, 'test.csv'),
                                              args.dataset, dataset_config.window_size)
 
-
+        print('model preparing..')
         model = SASA(max_len=dataset_config.window_size, coeff=hyparams_config.coeff,
                      segments_num=dataset_config.segments_num, input_dim=dataset_config.input_dim,
                      class_num=dataset_config.class_num,
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
         best_score = 0
         best_step = 0
-
+        print('start training...')
         while global_step < hyparams_config.training_steps:
             model.train()
             src_train_batch_x, src_train_batch_y, src_train_batch_l = src_train_generator.__next__() # 没有epochs，只有根据batch的training steps
@@ -101,7 +101,7 @@ if __name__ == '__main__':
             batch_total_loss.backward()
             optimizer.step()
             global_step += 1
-
+            
             if global_step % hyparams_config.test_per_step == 0 and global_step != 0:
 
                 total_tgt_test_label_loss = 0.0
