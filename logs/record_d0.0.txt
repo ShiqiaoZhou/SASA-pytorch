@@ -1,3 +1,12 @@
 src:1 -- trg:2 , best_result: 0.688157 
 
 
+src:B -- trg:T , best_result: 23688.3 
+
+
+src:G -- trg:T , best_result: 9041.14 
+
+
+src:S -- trg:T , best_result: 8372.65 
+
+

@@ -1,7 +1,7 @@
 import os
 import math
 
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, mean_squared_error
 
 import numpy as np
 from data_loader import get_dataset_size, data_generator
@@ -93,7 +93,7 @@ if __name__ == '__main__':
                 continue
             src_x = torch.tensor(src_train_batch_x).to(device)
             tgt_x = torch.tensor(tgt_train_batch_x).to(device)
-            src_y = torch.tensor(src_train_batch_y).long().to(device)
+            src_y = torch.tensor(src_train_batch_y).to(device) # 分类时，转换成long类型
 
             batch_y_pred, batch_total_loss = model.forward(src_x=src_x, src_y=src_y, tgt_x=tgt_x)
 
@@ -127,8 +127,9 @@ if __name__ == '__main__':
                 mean_tgt_test_label_loss = total_tgt_test_label_loss / tgt_test_epoch
                 tgt_test_y_pred_list = np.asarray(tgt_test_y_pred_list)
                 tgt_test_y_true_list = np.asarray(tgt_test_y_true_list)
-
-                score = roc_auc_score(tgt_test_y_true_list, tgt_test_y_pred_list[:, 1])
+                # print(tgt_test_y_true_list)
+                # print(tgt_test_y_pred_list)
+                score = mean_squared_error(tgt_test_y_true_list, tgt_test_y_pred_list) # 回归问题；分类问题用roc_auc_score
                 if best_score < score:
                     best_score = score
 

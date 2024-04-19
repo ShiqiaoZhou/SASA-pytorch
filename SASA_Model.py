@@ -37,7 +37,7 @@ class SASA(nn.Module):
         
         self.self_attn_V = nn.Sequential(nn.Linear(in_features=self.h_dim, out_features=self.h_dim),
 
-                                         nn.LeakyReLU()
+                                         nn.LeakyReLU() 
                                          )
 
         self.classifier = nn.Sequential(nn.BatchNorm1d(self.feature_dim * 2 * self.h_dim),
@@ -46,7 +46,7 @@ class SASA(nn.Module):
                                         nn.LeakyReLU(),
                                         nn.Dropout(self.drop_prob),
                                         nn.Linear(self.dense_dim, self.class_num))
-        self.cross_entropy = nn.CrossEntropyLoss()
+        self.MSE = nn.MSELoss()
 
     def forward(self, src_x, src_y, tgt_x):
         src_feature, src_intra_aw_list, src_inter_aw_list = self.calculate_feature_alpha_beta(src_x)
@@ -55,7 +55,7 @@ class SASA(nn.Module):
         domain_loss_beta = []
 
         y_pred = self.classifier(src_feature)
-        y_pred = torch.softmax(y_pred, dim=-1)
+        # y_pred = torch.softmax(y_pred, dim=-1) # 分类问题，最后一层需要softmax
         for i in range(self.feature_dim):
             domain_loss_intra = self.mmd_loss(src_struct=src_intra_aw_list[i],
                                               tgt_struct=tgt_intra_aw_list[i], weight=self.coeff)
@@ -67,9 +67,11 @@ class SASA(nn.Module):
         total_domain_loss_alpha = torch.tensor(domain_loss_alpha).mean()
 
         total_domain_loss_beta = torch.tensor(domain_loss_beta).mean()
+        # print(y_pred.shape, src_y.shape)
+        y_pred = torch.squeeze(y_pred)
+        src_reg_loss = self.MSE(y_pred, src_y) #回归问题 分类用交叉熵
 
-        src_cls_loss = self.cross_entropy(y_pred, src_y)
-        total_loss = src_cls_loss + total_domain_loss_beta + total_domain_loss_alpha
+        total_loss = src_reg_loss + total_domain_loss_beta + total_domain_loss_alpha
         return y_pred, total_loss
 
     def self_attention(self, Q, K, scale=True, sparse=True, k=3):
