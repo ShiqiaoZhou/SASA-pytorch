@@ -55,8 +55,7 @@ def data_transform(data_path, window_size, segments_length, dataset):
                 sample.append(a)
 
             sample = np.array(sample)
-            sample = np.transpose(sample, axes=((2, 0, 1)))[:, :, :,
-                     np.newaxis]
+            sample = np.transpose(sample, axes=((2, 0, 1)))
 
             feature.append(sample)
         feature, label = np.array(feature).astype(np.float32), np.array(label).astype(np.float32)

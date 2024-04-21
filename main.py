@@ -1,7 +1,7 @@
 import os
 import math
 
-from sklearn.metrics import roc_auc_score, mean_squared_error
+from sklearn.metrics import roc_auc_score, mean_squared_error, root_mean_squared_error
 
 import numpy as np
 from data_loader import get_dataset_size, data_generator
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
     parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
     parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
-    parser.add_argument("-batch_size", type=int, default=128)
+    parser.add_argument("-batch_size", type=int, default=512)
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
     
@@ -83,6 +83,7 @@ if __name__ == '__main__':
         best_score = 0
         best_step = 0
         print('start training...')
+        First = True
         while global_step < hyparams_config.training_steps:
             model.train()
             src_train_batch_x, src_train_batch_y, src_train_batch_l = src_train_generator.__next__() # 没有epochs，只有根据batch的training steps
@@ -98,6 +99,7 @@ if __name__ == '__main__':
             batch_y_pred, batch_total_loss = model.forward(src_x=src_x, src_y=src_y, tgt_x=tgt_x)
 
             optimizer.zero_grad()
+            batch_total_loss = torch.sqrt(batch_total_loss)
             batch_total_loss.backward()
             optimizer.step()
             global_step += 1
@@ -129,8 +131,11 @@ if __name__ == '__main__':
                 tgt_test_y_true_list = np.asarray(tgt_test_y_true_list)
                 # print(tgt_test_y_true_list)
                 # print(tgt_test_y_pred_list)
-                score = mean_squared_error(tgt_test_y_true_list, tgt_test_y_pred_list) # 回归问题；分类问题用roc_auc_score
-                if best_score < score:
+                score = root_mean_squared_error(tgt_test_y_true_list, tgt_test_y_pred_list) # 回归问题；分类问题用roc_auc_score
+                if First:
+                    best_score = score
+                    First = False
+                if best_score > score:
                     best_score = score
 
                 print("global_steps", global_step, "score", score)
