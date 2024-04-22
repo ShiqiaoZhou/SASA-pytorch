@@ -46,3 +46,45 @@ src:G -- trg:T , best_result: 35.0728
 src:S -- trg:T , best_result: 43.0215 
 
 
+src:B -- trg:T , best_result: 42.6446 
+
+
+src:G -- trg:T , best_result: 35.4371 
+
+
+src:S -- trg:T , best_result: 42.6538 
+
+
+src:B -- trg:T , best_result: 42.6447 
+
+
+src:G -- trg:T , best_result: 35.4371 
+
+
+src:B -- trg:T , best_result: 42.6447 
+
+
+src:G -- trg:T , best_result: 35.4371 
+
+
+src:S -- trg:T , best_result: 42.6538 
+
+
+src:B -- trg:T , best_result: 47.0721 
+
+
+src:G -- trg:T , best_result: 37.0846 
+
+
+src:S -- trg:T , best_result: 40.3928 
+
+
+src:Asher -- trg:Anastasia , best_result: 41.7067 
+
+
+src:Asher -- trg:Anastasia , best_result: 48.665 
+
+
+src:Asher -- trg:Anastasia , best_result: 47.5496 
+
+

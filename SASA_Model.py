@@ -28,11 +28,11 @@ class SASA(nn.Module):
             [LSTM(input_size=1, hidden_size=self.h_dim, num_layers=self.lstm_layer, batch_first=True) # hidden_size is the number of features in the hidden state h, 是输出的维度
              for _ in range(0, self.feature_dim)])
         self.self_attn_Q = nn.Sequential(nn.Linear(in_features=self.h_dim, out_features=self.h_dim),
-                                         nn.ELU()
+                                         nn.ELU() # ELU不同于ReLU的点是，它可以输出小于0的值，使得系统的平均输出为
                                          )
 
         self.self_attn_K = nn.Sequential(nn.Linear(in_features=self.h_dim, out_features=self.h_dim),
-                                         nn.LeakyReLU()
+                                         nn.LeakyReLU() # 有负值带斜率的relu 避免激活函数不处理负值
                                          )
         
         self.self_attn_V = nn.Sequential(nn.Linear(in_features=self.h_dim, out_features=self.h_dim),
@@ -69,12 +69,12 @@ class SASA(nn.Module):
         total_domain_loss_beta = torch.tensor(domain_loss_beta).mean()
         # print(y_pred.shape, src_y.shape)
         y_pred = torch.squeeze(y_pred)
-        src_reg_loss = self.MSE(y_pred, src_y) #回归问题 分类用交叉熵
+        src_reg_loss = torch.sqrt(self.MSE(y_pred, src_y)) #回归问题RMSE 分类用交叉熵
 
         total_loss = src_reg_loss + total_domain_loss_beta + total_domain_loss_alpha
         return y_pred, total_loss
 
-    def self_attention(self, Q, K, scale=True, sparse=True, k=3):
+    def self_attention(self, Q, K, scale=True, sparse=True, k=3): # 第一个时间序列内部的标准self attention 的weight
 
         segment_num = Q.shape[1]
 
@@ -94,7 +94,7 @@ class SASA(nn.Module):
 
         return attention_weight
 
-    def attention_fn(self, Q, K, scaled=False, sparse=True, k=1):
+    def attention_fn(self, Q, K, scaled=False, sparse=True, k=1): #第二个时间序列之间的 'reference' attention计算
         segment_num = Q.shape[1]
 
         attention_weight = torch.matmul(F.normalize(Q, p=2, dim=-1), F.normalize(K, p=2, dim=-1).permute(0, 1, 3, 2))
@@ -135,19 +135,19 @@ class SASA(nn.Module):
             candidate_representation_xi = torch.reshape(candidate_representation_xi,
                                                         shape=[-1, self.segments_num, self.h_dim]) # final hidden state for each element in the sequence #(batch,num_layers, hiddent size)
 
-            uni_candidate_representation_list[i] = candidate_representation_xi
+            uni_candidate_representation_list[i] = candidate_representation_xi # 第i个序列的segments的表示们
 
-            Q_xi = self.self_attn_Q(candidate_representation_xi)
+            Q_xi = self.self_attn_Q(candidate_representation_xi) # 相当于 h * W^Q
             K_xi = self.self_attn_K(candidate_representation_xi)
             V_xi = self.self_attn_V(candidate_representation_xi)
 
             intra_attention_weight_xi = self.self_attention(Q=Q_xi, K=K_xi, sparse=True)
 
             Z_i = torch.bmm(intra_attention_weight_xi.view(intra_attention_weight_xi.shape[0], 1, -1), 
-                            V_xi)
+                            V_xi) #  matrix multiplication 保证第一维不变 只是后两位矩阵乘法。 论文中的W^V就是这里的V_xi
 
             intra_attn_weight_list[i]=(torch.squeeze(intra_attention_weight_xi))
-            Z_i = F.normalize(Z_i, dim=-1)
+            Z_i = F.normalize(Z_i, dim=-1) # L2 normalization 为什么要normalize？
 
             uni_adaptation_representation[i] = Z_i
 

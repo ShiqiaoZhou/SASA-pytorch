@@ -28,3 +28,14 @@ class Air:
         self.segments_length = list(range(self.time_interval, self.window_size + 1, self.time_interval))
         self.segments_num = len(self.segments_length)
 
+class Building:
+    def __init__(self):
+        super(Building, self).__init__()
+        self.data_base_path = './datasets/Building'
+        self.scenarios = [("Asher", "Anastasia"), ]
+        self.input_dim = 48
+        self.class_num = 1
+        self.window_size = 6
+        self.time_interval = 1
+        self.segments_length = list(range(self.time_interval, self.window_size + 1, self.time_interval))
+        self.segments_num = len(self.segments_length)

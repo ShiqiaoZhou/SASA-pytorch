@@ -26,8 +26,8 @@ def setSeed(seed):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
     parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
-    parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
-    parser.add_argument("-batch_size", type=int, default=512)
+    parser.add_argument('-dataset', type=str, default='Building', help='which dataset ')
+    parser.add_argument("-batch_size", type=int, default=32)
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
     
@@ -99,7 +99,7 @@ if __name__ == '__main__':
             batch_y_pred, batch_total_loss = model.forward(src_x=src_x, src_y=src_y, tgt_x=tgt_x)
 
             optimizer.zero_grad()
-            batch_total_loss = torch.sqrt(batch_total_loss)
+            # batch_total_loss = torch.sqrt(batch_total_loss)
             batch_total_loss.backward()
             optimizer.step()
             global_step += 1
