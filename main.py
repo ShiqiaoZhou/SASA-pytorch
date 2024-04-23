@@ -1,7 +1,7 @@
 import os
 import math
 
-from sklearn.metrics import roc_auc_score, mean_squared_error, root_mean_squared_error
+from sklearn.metrics import roc_auc_score, mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 
 import numpy as np
 from data_loader import get_dataset_size, data_generator
@@ -50,7 +50,7 @@ if __name__ == '__main__':
                                              segments_length=dataset_config.segments_length,
                                              window_size=dataset_config.window_size,
                                              batch_size=args.batch_size, dataset=args.dataset, is_shuffle=True)
-        tgt_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, trg_id, 'train.csv'),
+        tgt_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, trg_id, 'train_2856.csv'),
                                              segments_length=dataset_config.segments_length,
                                              window_size=dataset_config.window_size,
                                              batch_size=args.batch_size, dataset=args.dataset, is_shuffle=True)
@@ -80,11 +80,14 @@ if __name__ == '__main__':
         total_train_label_loss = 0.0
         total_train_domain_loss = 0.0
 
-        best_score = 0
+        best_rmse = 0
+        best_r2 = 0
+        best_mae = 0
+        best_mape = 0
         best_step = 0
         print('start training...')
         First = True
-        while global_step < hyparams_config.training_steps:
+        while global_step < hyparams_config.training_steps: # 一次训练步一个bacth
             model.train()
             src_train_batch_x, src_train_batch_y, src_train_batch_l = src_train_generator.__next__() # 没有epochs，只有根据batch的training steps
 
@@ -131,16 +134,28 @@ if __name__ == '__main__':
                 tgt_test_y_true_list = np.asarray(tgt_test_y_true_list)
                 # print(tgt_test_y_true_list)
                 # print(tgt_test_y_pred_list)
-                score = root_mean_squared_error(tgt_test_y_true_list, tgt_test_y_pred_list) # 回归问题；分类问题用roc_auc_score
+                rmse = np.sqrt(mean_squared_error(tgt_test_y_true_list, tgt_test_y_pred_list)) # 回归问题；分类问题用roc_auc_score
+                r2 = r2_score(tgt_test_y_true_list, tgt_test_y_pred_list)
+                mae = mean_absolute_error(tgt_test_y_true_list, tgt_test_y_pred_list)
+                mape = mean_absolute_percentage_error(tgt_test_y_true_list, tgt_test_y_pred_list)
                 if First:
-                    best_score = score
+                    best_rmse = rmse
+                    best_r2 = r2
+                    best_mae = mae
+                    best_mape = mape
                     First = False
-                if best_score > score:
-                    best_score = score
+                if best_rmse > rmse:
+                    best_rmse = rmse
+                    best_r2 = r2
+                    best_mae = mae
+                    best_mape = mape
 
-                print("global_steps", global_step, "score", score)
+                print("global_steps", global_step, "score", best_rmse)
                 print("total loss",mean_tgt_test_label_loss)
-                print("best_score", best_score, '\n')
+                print("best_rmse", best_rmse, )
+                print("best_r2", best_r2, )
+                print("best_mae", best_mae, )
+                print("best_mape", best_mape, '\n')
 
-        print("src:%s -- trg:%s , best_result: %g \n\n" % (src_id, trg_id, best_score), file=record_file)
+        print("src:%s -- trg:%s , best_rmse: %g , best_r2: %g , best_mae: %g , best_mape: %g  \n\n" % (src_id, trg_id, best_rmse, best_r2, best_mae, best_mape), file=record_file)
         record_file.flush()

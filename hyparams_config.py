@@ -39,6 +39,6 @@ class Building:
         self.learning_rate = 0.0015
         self.coeff = 10
         self.h_dim = 10
-        self.dense_dim = 120
+        self.dense_dim = 100
         self.lstm_layer = 1
         self.weight_decay = 4e-7

@@ -88,3 +88,12 @@ src:Asher -- trg:Anastasia , best_result: 48.665
 src:Asher -- trg:Anastasia , best_result: 47.5496 
 
 
+src:Asher -- trg:Anastasia , best_rmse: 39.8137 , best_r2: 0.579175 , best_mae: 30.0762 , best_mape: 0.208954  
+
+
+src:Asher -- trg:Anastasia , best_rmse: 45.8942 , best_r2: 0.440818 , best_mae: 36.7344 , best_mape: 0.234553  
+
+
+src:Asher -- trg:Anastasia , best_rmse: 42.0345 , best_r2: 0.53092 , best_mae: 32.7419 , best_mape: 0.244139  train_2856.
+
+
