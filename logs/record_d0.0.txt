@@ -103,3 +103,21 @@ src:Asher -- trg:Cody , best_rmse: 20.8684 , best_r2: -0.221267 , best_mae: 16.4
 src:Asher -- trg:Anastasia , best_rmse: 42.845 , best_r2: 0.512656 , best_mae: 32.9807 , best_mape: 0.20021  
 
 
+src:Asher -- trg:Cody trg_train:train_240, best_rmse: 19.8919 , best_r2: -0.126866 , best_mae: 15.7443 , best_mape: 0.188728  
+
+
+src:Asher -- trg:Anastasia trg_train:train_240, best_rmse: 51.1517 , best_r2: 0.305365 , best_mae: 43.1279 , best_mape: 0.295721  
+
+
+src:Asher -- trg:Cody trg_train:train_240, best_rmse: 24.7399 , best_r2: -0.735594 , best_mae: 20.8878 , best_mape: 0.25089  
+
+
+src:B -- trg:T trg_train:train, best_rmse: 41.5717 , best_r2: 0.331411 , best_mae: 29.9358 , best_mape: 0.542453  
+
+
+src:G -- trg:T trg_train:train, best_rmse: 34.283 , best_r2: 0.545304 , best_mae: 24.6972 , best_mape: 0.570124  
+
+
+src:S -- trg:T trg_train:train, best_rmse: 40.8792 , best_r2: 0.3535 , best_mae: 29.0844 , best_mape: 0.645925  
+
+

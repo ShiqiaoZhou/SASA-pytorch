@@ -9,10 +9,10 @@ def get_dataset_size(test_data_path, dataset, window_size):
         return data.shape[0] - window_size + 1
     elif dataset=='Air':
             data = pd.read_csv(test_data_path).values
-            return  data.shape[0] - window_size
+            return  data.shape[0] - window_size + 1
     elif dataset=='Building':
-            data = pd.read_csv(test_data_path).values
-            return  data.shape[0] - window_size
+            data = pd.read_csv(test_data_path).dropna().values
+            return  data.shape[0] - window_size + 1
     else:
         raise Exception('unknown dataset!')
 

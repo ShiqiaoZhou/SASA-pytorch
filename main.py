@@ -13,7 +13,9 @@ from SASA_Model import SASA
 from dataset_config import get_dataset_config_class
 from hyparams_config import get_hyparams_config_class
 import random
-
+import matplotlib.pyplot as plt
+import pandas as pd
+from datetime import datetime
 
 def setSeed(seed):
     np.random.seed(seed)
@@ -22,15 +24,47 @@ def setSeed(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
+def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, train):
+    dates_datetime = [datetime.strptime(date_str, "%Y/%m/%d %H:%M") for date_str in test_timestampes] 
+    # 将时间索引转换为日期索
+    # 找到每天的第一个时刻并保存其索引
+    unique_days = set(date.date() for date in dates_datetime)
+    first_occurrences = {day: None for day in unique_days}
+
+    for i, date in enumerate(dates_datetime):
+        day = date.date()
+        if first_occurrences[day] is None:
+            first_occurrences[day] = i
+
+    # 排序并提取日期和索引
+    sorted_dates = sorted(list(first_occurrences.keys()))
+    sorted_indices = [first_occurrences[day] for day in sorted_dates]
+
+    # 准备绘图
+    plt.figure(figsize=(10, 6))
+    plt.plot(test_timestampes, tgt_test_y_true_list, label='Actual', color='blue')
+    plt.plot(test_timestampes, tgt_test_y_pred_list, label='Predicted', color='red')
+
+    # 设置x轴刻度
+    plt.xticks(ticks=[test_timestampes[i] for i in sorted_indices], labels=[date.strftime('%Y-%m-%d') for date in sorted_dates], rotation=45)
+
+    plt.xlabel('Date')
+    plt.ylabel('Value')
+    plt.title('Actual vs. Predicted')
+    plt.legend()
+    plt.tight_layout()  # 调整布局以适应标签
+    # plt.show()
+    plt.savefig('logs/'+src_id+ '2'+ trg_id + train + 'plot.png')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
     parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
-    parser.add_argument('-dataset', type=str, default='Building', help='which dataset ')
-    parser.add_argument("-batch_size", type=int, default=32)
+    parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
+    parser.add_argument("-batch_size", type=int, default=512)
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
-    parser.add_argument('-target_train', type=str, default='train_240')
+    parser.add_argument('-target_train', type=str, default='train')
     
 
     args = parser.parse_args()
@@ -51,6 +85,7 @@ if __name__ == '__main__':
                                              segments_length=dataset_config.segments_length,
                                              window_size=dataset_config.window_size,
                                              batch_size=args.batch_size, dataset=args.dataset, is_shuffle=True)
+        
         tgt_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, trg_id, args.target_train + '.csv'),
                                              segments_length=dataset_config.segments_length,
                                              window_size=dataset_config.window_size,
@@ -63,6 +98,11 @@ if __name__ == '__main__':
 
         tgt_test_set_size = get_dataset_size(os.path.join(dataset_config.data_base_path, trg_id, 'test.csv'),
                                              args.dataset, dataset_config.window_size)
+        
+        test_data_path=os.path.join ( dataset_config.data_base_path, trg_id, 'test.csv')
+        df = pd.read_csv(test_data_path)
+        test_timestampes = df.iloc[:, 0].dropna().astype(str).tolist()
+        test_timestampes = test_timestampes[dataset_config.window_size-1:]
 
         print('model preparing..')
         model = SASA(max_len=dataset_config.window_size, coeff=hyparams_config.coeff,
@@ -133,8 +173,7 @@ if __name__ == '__main__':
                 mean_tgt_test_label_loss = total_tgt_test_label_loss / tgt_test_epoch
                 tgt_test_y_pred_list = np.asarray(tgt_test_y_pred_list)
                 tgt_test_y_true_list = np.asarray(tgt_test_y_true_list)
-                # print(tgt_test_y_true_list)
-                # print(tgt_test_y_pred_list)
+            
                 rmse = np.sqrt(mean_squared_error(tgt_test_y_true_list, tgt_test_y_pred_list)) # 回归问题；分类问题用roc_auc_score
                 r2 = r2_score(tgt_test_y_true_list, tgt_test_y_pred_list)
                 mae = mean_absolute_error(tgt_test_y_true_list, tgt_test_y_pred_list)
@@ -145,11 +184,14 @@ if __name__ == '__main__':
                     best_mae = mae
                     best_mape = mape
                     First = False
+                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
+
                 if best_rmse > rmse:
                     best_rmse = rmse
                     best_r2 = r2
                     best_mae = mae
                     best_mape = mape
+                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
 
                 print("global_steps", global_step, "score", best_rmse)
                 print("total loss",mean_tgt_test_label_loss)
@@ -158,5 +200,8 @@ if __name__ == '__main__':
                 print("best_mae", best_mae, )
                 print("best_mape", best_mape, '\n')
 
+                
+                    
+    
         print("src:%s -- trg:%s trg_train:%s, best_rmse: %g , best_r2: %g , best_mae: %g , best_mape: %g  \n\n" % (src_id, trg_id, args.target_train, best_rmse, best_r2, best_mae, best_mape), file=record_file)
         record_file.flush()
