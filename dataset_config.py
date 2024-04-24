@@ -32,7 +32,7 @@ class Building:
     def __init__(self):
         super(Building, self).__init__()
         self.data_base_path = './datasets/Building'
-        self.scenarios = [("Asher", "Anastasia"), ]
+        self.scenarios = [("Asher", "Cody"),("Asher", "Anastasia"), ]
         self.input_dim = 48
         self.class_num = 1
         self.window_size = 6

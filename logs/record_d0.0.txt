@@ -97,3 +97,9 @@ src:Asher -- trg:Anastasia , best_rmse: 45.8942 , best_r2: 0.440818 , best_mae: 
 src:Asher -- trg:Anastasia , best_rmse: 42.0345 , best_r2: 0.53092 , best_mae: 32.7419 , best_mape: 0.244139  train_2856.
 
 
+src:Asher -- trg:Cody , best_rmse: 20.8684 , best_r2: -0.221267 , best_mae: 16.4003 , best_mape: 0.197564  
+
+
+src:Asher -- trg:Anastasia , best_rmse: 42.845 , best_r2: 0.512656 , best_mae: 32.9807 , best_mape: 0.20021  
+
+

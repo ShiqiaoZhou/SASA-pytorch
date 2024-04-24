@@ -30,6 +30,7 @@ if __name__ == '__main__':
     parser.add_argument("-batch_size", type=int, default=32)
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
+    parser.add_argument('-target_train', type=str, default='train_240')
     
 
     args = parser.parse_args()
@@ -50,7 +51,7 @@ if __name__ == '__main__':
                                              segments_length=dataset_config.segments_length,
                                              window_size=dataset_config.window_size,
                                              batch_size=args.batch_size, dataset=args.dataset, is_shuffle=True)
-        tgt_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, trg_id, 'train_2856.csv'),
+        tgt_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, trg_id, args.target_train + '.csv'),
                                              segments_length=dataset_config.segments_length,
                                              window_size=dataset_config.window_size,
                                              batch_size=args.batch_size, dataset=args.dataset, is_shuffle=True)
@@ -157,5 +158,5 @@ if __name__ == '__main__':
                 print("best_mae", best_mae, )
                 print("best_mape", best_mape, '\n')
 
-        print("src:%s -- trg:%s , best_rmse: %g , best_r2: %g , best_mae: %g , best_mape: %g  \n\n" % (src_id, trg_id, best_rmse, best_r2, best_mae, best_mape), file=record_file)
+        print("src:%s -- trg:%s trg_train:%s, best_rmse: %g , best_r2: %g , best_mae: %g , best_mape: %g  \n\n" % (src_id, trg_id, args.target_train, best_rmse, best_r2, best_mae, best_mape), file=record_file)
         record_file.flush()
