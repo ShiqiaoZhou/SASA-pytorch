@@ -24,6 +24,32 @@ def setSeed(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
+def heatmap(src_inter_aw_list,feature_dim, source):
+     #  计算每个tensor的后两维平均值
+    average_weights = {}
+    for key, tensor in src_inter_aw_list.items():
+        average_weights[key] = tensor.mean(dim=(-2, -1))  # 在倒数第二和倒数第一维度上求平均  没问题
+
+    # 创建11x11的热力图
+    heatmap_data = torch.zeros((feature_dim, feature_dim))
+    for i in range(11):
+        for j in range(11):
+            # 使用average_weights计算对应位置的权重
+            heatmap_data[i, j] = average_weights[i][j]
+
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = source + f'_heatmap_{timestamp}.png'
+
+    # 绘制热力图
+    plt.figure(figsize=(8, 6))
+    plt.imshow(heatmap_data.detach().numpy(), cmap='Blues', interpolation='nearest', aspect='auto')
+    plt.colorbar()
+    plt.title('Attention Heatmap')
+    plt.xlabel('Source Vectors')
+    plt.ylabel('Target Vectors')
+    plt.savefig(filename)
+    plt.show()
+
 def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, train):
     dates_datetime = [datetime.strptime(date_str, "%Y/%m/%d %H:%M") for date_str in test_timestampes] 
     # 将时间索引转换为日期索
@@ -61,7 +87,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
     parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
     parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
-    parser.add_argument("-batch_size", type=int, default=512)
+    parser.add_argument("-batch_size", type=int, default=128)
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
     parser.add_argument('-target_train', type=str, default='train')
@@ -128,6 +154,8 @@ if __name__ == '__main__':
         best_step = 0
         print('start training...')
         First = True
+        src_inter_aw_list = {}
+        tgt_inter_aw_list = {}
         while global_step < hyparams_config.training_steps: # 一次训练步一个bacth
             model.train()
             src_train_batch_x, src_train_batch_y, src_train_batch_l = src_train_generator.__next__() # 没有epochs，只有根据batch的training steps
@@ -140,7 +168,7 @@ if __name__ == '__main__':
             tgt_x = torch.tensor(tgt_train_batch_x).to(device)
             src_y = torch.tensor(src_train_batch_y).to(device) # 分类时，转换成long类型
 
-            batch_y_pred, batch_total_loss = model.forward(src_x=src_x, src_y=src_y, tgt_x=tgt_x)
+            batch_y_pred, batch_total_loss, src_inter_aw_list, tgt_inter_aw_list = model.forward(src_x=src_x, src_y=src_y, tgt_x=tgt_x)
 
             optimizer.zero_grad()
             # batch_total_loss = torch.sqrt(batch_total_loss)
@@ -163,7 +191,7 @@ if __name__ == '__main__':
                         test_x = torch.tensor(test_batch_tgt_x).to(device)
                         test_y = torch.tensor(test_batch_tgt_y).long().to(device)
 
-                        batch_tgt_y_pred, batch_tgt_total_loss =  model.forward(src_x=test_x, src_y=test_y, tgt_x=torch.clone(test_x))
+                        batch_tgt_y_pred, batch_tgt_total_loss, bacth_src_inter_aw_list, bacth_tgt_inter_aw_list =  model.forward(src_x=test_x, src_y=test_y, tgt_x=torch.clone(test_x))
 
                         total_tgt_test_label_loss += batch_tgt_total_loss.detach().cpu().numpy()
 
@@ -184,14 +212,16 @@ if __name__ == '__main__':
                     best_mae = mae
                     best_mape = mape
                     First = False
-                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
+                    heatmap(src_inter_aw_list, dataset_config.input_dim, source = 'src='+src_id)
+                    heatmap(tgt_inter_aw_list, dataset_config.input_dim, source = 'tgt='+trg_id)
+                    # plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
 
                 if best_rmse > rmse:
                     best_rmse = rmse
                     best_r2 = r2
                     best_mae = mae
                     best_mape = mape
-                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
+                    # plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
 
                 print("global_steps", global_step, "score", best_rmse)
                 print("total loss",mean_tgt_test_label_loss)
@@ -205,3 +235,6 @@ if __name__ == '__main__':
     
         print("src:%s -- trg:%s trg_train:%s, best_rmse: %g , best_r2: %g , best_mae: %g , best_mape: %g  \n\n" % (src_id, trg_id, args.target_train, best_rmse, best_r2, best_mae, best_mape), file=record_file)
         record_file.flush()
+
+        heatmap(src_inter_aw_list, dataset_config.input_dim, source = 'src='+src_id)
+        heatmap(tgt_inter_aw_list, dataset_config.input_dim, source = 'tgt='+trg_id)

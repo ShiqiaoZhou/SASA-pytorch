@@ -121,3 +121,27 @@ src:G -- trg:T trg_train:train, best_rmse: 34.283 , best_r2: 0.545304 , best_mae
 src:S -- trg:T trg_train:train, best_rmse: 40.8792 , best_r2: 0.3535 , best_mae: 29.0844 , best_mape: 0.645925  
 
 
+src:B -- trg:T trg_train:train, best_rmse: 41.5717 , best_r2: 0.331411 , best_mae: 29.9358 , best_mape: 0.542453  
+
+
+src:B -- trg:S trg_train:train, best_rmse: 0 , best_r2: 0 , best_mae: 0 , best_mape: 0  
+
+
+src:B -- trg:S trg_train:train, best_rmse: 15.0127 , best_r2: -0.18259 , best_mae: 10.8061 , best_mape: 0.304533  
+
+
+src:B -- trg:S trg_train:train, best_rmse: 15.0127 , best_r2: -0.18259 , best_mae: 10.8061 , best_mape: 0.304533  
+
+
+src:B -- trg:S trg_train:train, best_rmse: 15.0127 , best_r2: -0.18259 , best_mae: 10.8061 , best_mape: 0.304533  
+
+
+src:B -- trg:S trg_train:train, best_rmse: 15.0127 , best_r2: -0.18259 , best_mae: 10.8061 , best_mape: 0.304533  
+
+
+src:B -- trg:S trg_train:train, best_rmse: 15.0127 , best_r2: -0.18259 , best_mae: 10.8061 , best_mape: 0.304533  
+
+
+src:B -- trg:S trg_train:train, best_rmse: 12.6328 , best_r2: 0.162635 , best_mae: 9.94325 , best_mape: 0.351943  
+
+

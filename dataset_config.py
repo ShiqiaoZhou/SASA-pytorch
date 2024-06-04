@@ -20,7 +20,10 @@ class Air:
     def __init__(self):
         super(Air, self).__init__()
         self.data_base_path = './datasets/Air'
-        self.scenarios = [("B", "T"), ("G", "T"), ("S", "T")]
+        self.scenarios = [("B", "S"), 
+                        #   ("G", "T"), 
+                        #   ("S", "T"),
+                          ]
         self.input_dim = 11
         self.class_num = 1
         self.window_size = 6

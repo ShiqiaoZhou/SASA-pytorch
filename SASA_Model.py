@@ -5,7 +5,8 @@ from torch.nn import LSTM
 import torch.nn.functional as F
 
 from sparsemax import Sparsemax
-
+import numpy as np
+import matplotlib.pyplot as plt
 
 class SASA(nn.Module):
 
@@ -72,7 +73,7 @@ class SASA(nn.Module):
         src_reg_loss = torch.sqrt(self.MSE(y_pred, src_y)) #回归问题RMSE 分类用交叉熵
 
         total_loss = src_reg_loss + total_domain_loss_beta + total_domain_loss_alpha
-        return y_pred, total_loss
+        return y_pred, total_loss, src_inter_aw_list, tgt_inter_aw_list
 
     def self_attention(self, Q, K, scale=True, sparse=True, k=3): # 第一个时间序列内部的标准self attention 的weight
 
