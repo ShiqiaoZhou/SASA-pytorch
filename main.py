@@ -42,8 +42,8 @@ def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, t
 
     # 准备绘图
     plt.figure(figsize=(10, 6))
-    plt.plot(test_timestampes, tgt_test_y_true_list, label='Actual', color='blue')
-    plt.plot(test_timestampes, tgt_test_y_pred_list, label='Predicted', color='red')
+    plt.plot(test_timestampes[:235], tgt_test_y_true_list[:235], label='Actual', color='blue')
+    plt.plot(test_timestampes[:235], tgt_test_y_pred_list[:235], label='Predicted', color='red')
 
     # 设置x轴刻度
     plt.xticks(ticks=[test_timestampes[i] for i in sorted_indices], labels=[date.strftime('%Y-%m-%d') for date in sorted_dates], rotation=45)
@@ -54,17 +54,17 @@ def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, t
     plt.legend()
     plt.tight_layout()  # 调整布局以适应标签
     # plt.show()
-    plt.savefig('logs/'+src_id+ '2'+ trg_id + train + 'plot.png')
+    plt.savefig('logs/'+src_id+ '_to_'+ trg_id + '_target_' + train + '_plot.png')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
     parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
-    parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
-    parser.add_argument("-batch_size", type=int, default=512)
+    parser.add_argument('-dataset', type=str, default='Building', help='which dataset ')
+    parser.add_argument("-batch_size", type=int, default=32) # 数据集不同要改
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
-    parser.add_argument('-target_train', type=str, default='train')
+    parser.add_argument('-target_train', type=str, default='train_1416')
     
 
     args = parser.parse_args()
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     for src_id, trg_id in dataset_config.scenarios:
         print(f'source :{src_id}  target:{trg_id}')
         print('data preparing..')
-        src_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, src_id, 'train.csv'),
+        src_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, src_id, 'train_2856.csv'),
                                              segments_length=dataset_config.segments_length,
                                              window_size=dataset_config.window_size,
                                              batch_size=args.batch_size, dataset=args.dataset, is_shuffle=True)
@@ -184,14 +184,14 @@ if __name__ == '__main__':
                     best_mae = mae
                     best_mape = mape
                     First = False
-                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
+                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, args.target_train)
 
                 if best_rmse > rmse:
                     best_rmse = rmse
                     best_r2 = r2
                     best_mae = mae
                     best_mape = mape
-                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
+                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, args.target_train)
 
                 print("global_steps", global_step, "score", best_rmse)
                 print("total loss",mean_tgt_test_label_loss)

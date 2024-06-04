@@ -97,7 +97,7 @@ def data_generator(data_path, window_size, segments_length, batch_size, dataset,
     batch_count = 0
     while True:
         if batch_size * batch_count >= len(label):
-            feature, label = shuffle(feature, label)
+            # feature, label = shuffle(feature, label) # 为什么要shuffle
             batch_count = 0
 
         start_index = batch_count * batch_size
