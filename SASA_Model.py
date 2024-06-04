@@ -50,8 +50,8 @@ class SASA(nn.Module):
         self.MSE = nn.MSELoss()
 
     def forward(self, src_x, src_y, tgt_x):
-        src_feature, src_intra_aw_list, src_inter_aw_list = self.calculate_feature_alpha_beta(src_x)
-        tgt_feature, tgt_intra_aw_list, tgt_inter_aw_list = self.calculate_feature_alpha_beta(tgt_x)
+        src_feature, src_intra_aw_list, src_inter_aw_list, U_i_src = self.calculate_feature_alpha_beta(src_x)
+        tgt_feature, tgt_intra_aw_list, tgt_inter_aw_list, U_i_trg = self.calculate_feature_alpha_beta(tgt_x)
         domain_loss_alpha = []
         domain_loss_beta = []
 
@@ -73,7 +73,7 @@ class SASA(nn.Module):
         src_reg_loss = torch.sqrt(self.MSE(y_pred, src_y)) #回归问题RMSE 分类用交叉熵
 
         total_loss = src_reg_loss + total_domain_loss_beta + total_domain_loss_alpha
-        return y_pred, total_loss, src_inter_aw_list, tgt_inter_aw_list
+        return y_pred, total_loss, src_inter_aw_list, tgt_inter_aw_list, U_i_src, U_i_trg
 
     def self_attention(self, Q, K, scale=True, sparse=True, k=3): # 第一个时间序列内部的标准self attention 的weight
 
@@ -128,8 +128,9 @@ class SASA(nn.Module):
         inter_attn_weight_list = {}
 
         Hi_list = []
+        U_i_src = 0
 
-        for i in range(0, self.feature_dim): # 每个单元时间序列的循环
+        for i in range(0, self.feature_dim): # 每个单元时间序列的循环 
             xi = torch.reshape(x[:, i, :, :], shape=[-1, self.max_len, 1]) # -1 是被infer的，这里是之前所有的元素除以（self.max_len * 1）
             _, (candidate_representation_xi, _) = self.base_bone_list[i](xi)
 
@@ -155,11 +156,11 @@ class SASA(nn.Module):
         for i in range(0, self.feature_dim):
             Z_i = uni_adaptation_representation[i]
             other_candidate_representation_src = torch.stack(
-                [uni_candidate_representation_list[j] for j in range(self.feature_dim)], dim=0)
+                [uni_candidate_representation_list[j] for j in range(self.feature_dim)], dim=0) #把列表变成了tensor
 
-            inter_attention_weight = self.attention_fn(Q=Z_i, K=other_candidate_representation_src, sparse=True)
+            inter_attention_weight = self.attention_fn(Q=Z_i, K=other_candidate_representation_src, sparse=True) #beta 按论文里的公式
 
-            U_i_src = torch.mean(torch.matmul(inter_attention_weight, other_candidate_representation_src), dim=0)
+            U_i_src = torch.mean(torch.matmul(inter_attention_weight, other_candidate_representation_src), dim=0) 
 
             inter_attn_weight_list[i]=(torch.squeeze(inter_attention_weight))
             Hi = torch.squeeze(torch.cat([Z_i, U_i_src], dim=-1), dim=1)
@@ -167,4 +168,4 @@ class SASA(nn.Module):
             Hi_list.append(Hi)
         final_feature = torch.reshape(torch.cat(Hi_list, dim=-1, ),
                                       shape=[x.shape[0], self.feature_dim * 2 * self.h_dim])
-        return final_feature, intra_attn_weight_list, inter_attn_weight_list
+        return final_feature, intra_attn_weight_list, inter_attn_weight_list, U_i_src

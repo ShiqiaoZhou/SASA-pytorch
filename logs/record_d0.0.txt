@@ -200,3 +200,9 @@ src:Asher -- trg:Anastasia trg_train:train_1416, best_rmse: 44.4659 , best_r2: 0
 >>>>>>> e10b6cb5af23ff2b3ec27b2864f6424f6c0fa4c0
 
 
+src:Cody -- trg:Anastasia trg_train:train_1416, best_rmse: 163.188 , best_r2: -6.06988 , best_mae: 151.223 , best_mape: 0.996243  
+
+
+src:Anastasia -- trg:Cody trg_train:train_1416, best_rmse: 87.9666 , best_r2: -20.9426 , best_mae: 85.9758 , best_mape: 0.991693  
+
+

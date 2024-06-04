@@ -24,7 +24,7 @@ def setSeed(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
-def heatmap(src_inter_aw_list,feature_dim, source):
+def heatmap(src_inter_aw_list, feature_dim, source):
      #  计算每个tensor的后两维平均值
     average_weights = {}
     for key, tensor in src_inter_aw_list.items():
@@ -47,7 +47,7 @@ def heatmap(src_inter_aw_list,feature_dim, source):
     plt.title('Attention Heatmap')
     plt.xlabel('Source Vectors')
     plt.ylabel('Target Vectors')
-    plt.savefig(filename)
+    # plt.savefig(filename)
     plt.show()
 
 def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, train):
@@ -79,20 +79,20 @@ def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, t
     plt.title('Actual vs. Predicted')
     plt.legend()
     plt.tight_layout()  # 调整布局以适应标签
-    # plt.show()
-    plt.savefig('logs/'+src_id+ '_to_'+ trg_id + '_target_' + train + '_plot.png')
+    plt.show()
+    # plt.savefig('logs/'+src_id+ '_to_'+ trg_id + '_target_' + train + '_plot.png')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
     parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
-<<<<<<< HEAD
-    parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
-    parser.add_argument("-batch_size", type=int, default=128)
-=======
+
+    # parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
+    # parser.add_argument("-batch_size", type=int, default=128)
+
     parser.add_argument('-dataset', type=str, default='Building', help='which dataset ')
     parser.add_argument("-batch_size", type=int, default=32) # 数据集不同要改
->>>>>>> e10b6cb5af23ff2b3ec27b2864f6424f6c0fa4c0
+
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
     parser.add_argument('-target_train', type=str, default='train_1416')
@@ -173,7 +173,12 @@ if __name__ == '__main__':
             tgt_x = torch.tensor(tgt_train_batch_x).to(device)
             src_y = torch.tensor(src_train_batch_y).to(device) # 分类时，转换成long类型
 
-            batch_y_pred, batch_total_loss, src_inter_aw_list, tgt_inter_aw_list = model.forward(src_x=src_x, src_y=src_y, tgt_x=tgt_x)
+            batch_y_pred, batch_total_loss, src_inter_aw_list, tgt_inter_aw_list, U_i_src, U_i_tgt = model.forward(src_x=src_x, src_y=src_y, tgt_x=tgt_x)
+
+            # print(U_i_src)
+            # print(U_i_src.shape)
+            # print(U_i_tgt)
+
 
             optimizer.zero_grad()
             # batch_total_loss = torch.sqrt(batch_total_loss)
@@ -196,7 +201,7 @@ if __name__ == '__main__':
                         test_x = torch.tensor(test_batch_tgt_x).to(device)
                         test_y = torch.tensor(test_batch_tgt_y).long().to(device)
 
-                        batch_tgt_y_pred, batch_tgt_total_loss, bacth_src_inter_aw_list, bacth_tgt_inter_aw_list =  model.forward(src_x=test_x, src_y=test_y, tgt_x=torch.clone(test_x))
+                        batch_tgt_y_pred, batch_tgt_total_loss, bacth_src_inter_aw_list, bacth_tgt_inter_aw_list, batch_U_i_src, batch_U_i_tgt=  model.forward(src_x=test_x, src_y=test_y, tgt_x=torch.clone(test_x))
 
                         total_tgt_test_label_loss += batch_tgt_total_loss.detach().cpu().numpy()
 
@@ -217,24 +222,12 @@ if __name__ == '__main__':
                     best_mae = mae
                     best_mape = mape
                     First = False
-<<<<<<< HEAD
-                    heatmap(src_inter_aw_list, dataset_config.input_dim, source = 'src='+src_id)
-                    heatmap(tgt_inter_aw_list, dataset_config.input_dim, source = 'tgt='+trg_id)
-                    # plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
-=======
-                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, args.target_train)
->>>>>>> e10b6cb5af23ff2b3ec27b2864f6424f6c0fa4c0
 
-                if best_rmse > rmse:
-                    best_rmse = rmse
-                    best_r2 = r2
-                    best_mae = mae
-                    best_mape = mape
-<<<<<<< HEAD
-                    # plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id)
-=======
+                    # heatmap(U_i_src, dataset_config.input_dim, source = 'src='+src_id)
+                    # heatmap(U_i_tgt, dataset_config.input_dim, source = 'tgt='+trg_id)
+                    # plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id
                     plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, args.target_train)
->>>>>>> e10b6cb5af23ff2b3ec27b2864f6424f6c0fa4c0
+
 
                 print("global_steps", global_step, "score", best_rmse)
                 print("total loss",mean_tgt_test_label_loss)
@@ -248,6 +241,7 @@ if __name__ == '__main__':
     
         print("src:%s -- trg:%s trg_train:%s, best_rmse: %g , best_r2: %g , best_mae: %g , best_mape: %g  \n\n" % (src_id, trg_id, args.target_train, best_rmse, best_r2, best_mae, best_mape), file=record_file)
         record_file.flush()
-
+        plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, args.target_train)
+        
         heatmap(src_inter_aw_list, dataset_config.input_dim, source = 'src='+src_id)
         heatmap(tgt_inter_aw_list, dataset_config.input_dim, source = 'tgt='+trg_id)
