@@ -24,34 +24,80 @@ def setSeed(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
-def heatmap(src_inter_aw_list, feature_dim, source):
-     #  计算每个tensor的后两维平均值
-    average_weights = {}
-    for key, tensor in src_inter_aw_list.items():
-        average_weights[key] = tensor.mean(dim=(-2, -1))  # 在倒数第二和倒数第一维度上求平均  没问题
+def structure_transform(inter_aw_list):
+    inter_aw = torch.stack(list(inter_aw_list.values()), dim=0)
+    aaa = inter_aw
+    inter_aw = torch.max(torch.median(torch.abs(inter_aw), dim=-1)[-1], dim=-1)[-1].cpu().numpy()
+    return inter_aw
 
-    # 创建11x11的热力图
-    heatmap_data = torch.zeros((feature_dim, feature_dim))
-    for i in range(11):
-        for j in range(11):
-            # 使用average_weights计算对应位置的权重
-            heatmap_data[i, j] = average_weights[i][j]
+def heatmap(src_inter_aw_list, tgt_inter_aw_list, feature_dim, source, target):
+     #  计算每个tensor的后两维平均值
+    # average_weights = {}
+    # for key, tensor in src_inter_aw_list.items():
+    #     # average_weights[key] = tensor.mean(dim=(-2, -1))  # 在倒数第二和倒数第一维度上求平均  没问题
+
+    #     average_weights[key] = torch.max(torch.median(torch.abs(tensor), dim=-1)[-1], dim=-1)[-1].cpu().numpy()
+
+    # # 创建11x11的热力图
+    # heatmap_data = torch.zeros((feature_dim, feature_dim))
+    # for i in range(len(src_inter_aw_list)):
+    #     for j in range(len(src_inter_aw_list)):
+    #         # 使用average_weights计算对应位置的权重
+    #         heatmap_data[i, j] = average_weights[i][j]
+
+    src_graph = structure_transform(src_inter_aw_list)
+    tgt_graph = structure_transform(tgt_inter_aw_list)
+
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    filename = source + f'_heatmap_{timestamp}.png'
 
-    # 绘制热力图
-    plt.figure(figsize=(8, 6))
-    plt.imshow(heatmap_data.detach().numpy(), cmap='Blues', interpolation='nearest', aspect='auto')
-    plt.colorbar()
-    plt.title('Attention Heatmap')
-    plt.xlabel('Source Vectors')
-    plt.ylabel('Target Vectors')
-    # plt.savefig(filename)
+    filename = source + '_to_' + target + f'_heatmap_{timestamp}.png'
+
+    fig, axarr = plt.subplots(2, 2, figsize=(16, 10))
+    axarr[0][0].imshow(src_graph, cmap="Blues")
+    axarr[0][0].set_title('src full graph')
+    axarr[0][0].set_ylabel('Affected series')
+    axarr[0][0].set_xlabel('Causal series')
+
+    axarr[1][0].imshow(tgt_graph, cmap="Blues")
+    axarr[1][0].set_title('tgt full graph')
+    axarr[1][0].set_ylabel('Affected series')
+    axarr[1][0].set_xlabel('Causal series')
+
+    # # 绘制热力图
+    # plt.figure(figsize=(8, 6))
+    # plt.imshow(heatmap_data.detach().numpy(), cmap='Blues', interpolation='nearest', aspect='auto')
+    # plt.colorbar()
+    # plt.title('Attention Heatmap')
+    # plt.xlabel('Source Vectors')
+    # plt.ylabel('Target Vectors')
+    plt.savefig(filename)
     plt.show()
 
-def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, train):
-    dates_datetime = [datetime.strptime(date_str, "%Y/%m/%d %H:%M") for date_str in test_timestampes] 
+def detect_date_format(date_str):
+    possible_formats = [
+        "%Y/%m/%d %H:%M",  # 格式1: 年/月/日 时:分
+        "%Y-%m-%d %H:%M:%S",  # 格式2: 年-月-日 时:分:秒
+        # 添加其他可能的日期格式...
+    ]
+
+    for format_str in possible_formats:
+        try:
+            datetime.strptime(date_str, format_str)
+            return format_str
+             
+        except ValueError:
+            pass
+    
+    # 如果无法确定日期格式，则返回 None
+    return None
+
+def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, dataset, src_id, trg_id, train):
+
+    if dataset == 'Air':
+        dates_datetime = [datetime.strptime(date_str, detect_date_format(date_str)) for date_str in test_timestampes]
+    else:
+        dates_datetime = [datetime.strptime(date_str, "%Y/%m/%d %H:%M") for date_str in test_timestampes] 
     # 将时间索引转换为日期索
     # 找到每天的第一个时刻并保存其索引
     unique_days = set(date.date() for date in dates_datetime)
@@ -80,22 +126,22 @@ def plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, t
     plt.legend()
     plt.tight_layout()  # 调整布局以适应标签
     plt.show()
-    # plt.savefig('logs/'+src_id+ '_to_'+ trg_id + '_target_' + train + '_plot.png')
+    plt.savefig('logs/'+src_id+ '_to_'+ trg_id + '_target_' + train + '_plot.png')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='train')
     parser.add_argument('-cuda_device', type=str, default='0', help='which gpu to use ')
 
-    # parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
-    # parser.add_argument("-batch_size", type=int, default=128)
+    parser.add_argument('-dataset', type=str, default='Air', help='which dataset ')
+    parser.add_argument("-batch_size", type=int, default=128)
 
-    parser.add_argument('-dataset', type=str, default='Building', help='which dataset ')
-    parser.add_argument("-batch_size", type=int, default=32) # 数据集不同要改
+    # parser.add_argument('-dataset', type=str, default='Building', help='which dataset ')
+    # parser.add_argument("-batch_size", type=int, default=32) # 数据集不同要改
 
     parser.add_argument("-seed", type=int, default=10)
     parser.add_argument('-epochs', type=int, default=40)
-    parser.add_argument('-target_train', type=str, default='train_1416')
+    parser.add_argument('-target_train', type=str, default='train')
     
 
     args = parser.parse_args()
@@ -112,7 +158,7 @@ if __name__ == '__main__':
     for src_id, trg_id in dataset_config.scenarios:
         print(f'source :{src_id}  target:{trg_id}')
         print('data preparing..')
-        src_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, src_id, 'train_2856.csv'),
+        src_train_generator = data_generator(data_path=os.path.join(dataset_config.data_base_path, src_id, 'train.csv'),
                                              segments_length=dataset_config.segments_length,
                                              window_size=dataset_config.window_size,
                                              batch_size=args.batch_size, dataset=args.dataset, is_shuffle=True)
@@ -223,10 +269,10 @@ if __name__ == '__main__':
                     best_mape = mape
                     First = False
 
-                    # heatmap(U_i_src, dataset_config.input_dim, source = 'src='+src_id)
-                    # heatmap(U_i_tgt, dataset_config.input_dim, source = 'tgt='+trg_id)
+                    heatmap(src_inter_aw_list, tgt_inter_aw_list, dataset_config.input_dim, source = 'src='+src_id, target='tgt='+trg_id)
+                    # heatmap(tgt_inter_aw_list, dataset_config.input_dim, source = 'tgt='+trg_id)
                     # plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.target_train, src_id, trg_id
-                    plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, args.target_train)
+                    # plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, args.dataset, src_id, trg_id, args.target_train)
 
 
                 print("global_steps", global_step, "score", best_rmse)
@@ -241,7 +287,8 @@ if __name__ == '__main__':
     
         print("src:%s -- trg:%s trg_train:%s, best_rmse: %g , best_r2: %g , best_mae: %g , best_mape: %g  \n\n" % (src_id, trg_id, args.target_train, best_rmse, best_r2, best_mae, best_mape), file=record_file)
         record_file.flush()
-        plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list, src_id, trg_id, args.target_train)
+        heatmap(src_inter_aw_list, tgt_inter_aw_list, dataset_config.input_dim, source = 'src='+src_id, target='tgt='+trg_id)
+        plot(test_timestampes, tgt_test_y_true_list, tgt_test_y_pred_list,args.dataset, src_id, trg_id, args.target_train)
         
-        heatmap(src_inter_aw_list, dataset_config.input_dim, source = 'src='+src_id)
-        heatmap(tgt_inter_aw_list, dataset_config.input_dim, source = 'tgt='+trg_id)
+        # heatmap(src_inter_aw_list, dataset_config.input_dim, source = 'src='+src_id)
+        # heatmap(tgt_inter_aw_list, dataset_config.input_dim, source = 'tgt='+trg_id)

@@ -7,5 +7,7 @@ import pandas as pd
 # print(data[5:, :])
 # print(data.shape)
 
-tensor = torch.tensor([[[2,3],[2,4],[2,5]],[[1,3],[1,4],[1,5]]], dtype=torch.float)
+tensor = torch.tensor([[[2,3],[2,4],[2,5]],
+                       [[1,3],[1,4],[1,5]]], dtype=torch.float)
+print(torch.max(tensor, dim=0))
 print(torch.mean(tensor, dim=(-2, -1)))
